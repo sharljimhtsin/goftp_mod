@@ -16,14 +16,17 @@ import (
 func main() {
 	var (
 		root = flag.String("root", "", "Root directory to serve")
-		user = flag.String("user", "nobody", "Username for login")
-		pass = flag.String("pass", "123456", "Password for login")
 		port = flag.Int("port", 2121, "Port")
 		host = flag.String("host", "localhost", "Port")
+		cfg  = flag.String("cfg", "", "path to cfg")
 	)
 	flag.Parse()
 	if *root == "" {
 		log.Fatalf("Please set a root to serve with -root")
+	}
+
+	if *cfg == "" {
+		log.Fatalf("Please set a cfg to serve with -cfg")
 	}
 
 	factory := &filedriver.FileDriverFactory{
@@ -35,11 +38,11 @@ func main() {
 		Factory:  factory,
 		Port:     *port,
 		Hostname: *host,
-		Auth:     &server.SimpleAuth{Name: *user, Password: *pass},
+		Auth:     &server.SimpleAuth{Cfg: *cfg},
 	}
 
 	log.Printf("Starting ftp server on %v:%v", opts.Hostname, opts.Port)
-	log.Printf("Username %v, Password %v", *user, *pass)
+	log.Printf("cfg path is %v", *cfg)
 	server := server.NewServer(opts)
 	err := server.ListenAndServe()
 	if err != nil {

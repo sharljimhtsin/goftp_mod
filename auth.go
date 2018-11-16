@@ -4,6 +4,13 @@
 
 package server
 
+import (
+	"bufio"
+	"log"
+	"os"
+	"strings"
+)
+
 // Auth is an interface to auth your ftp user login.
 type Auth interface {
 	CheckPasswd(string, string) (bool, error)
@@ -15,14 +22,26 @@ var (
 
 // SimpleAuth implements Auth interface to provide a memory user login auth
 type SimpleAuth struct {
-	Name     string
-	Password string
+	Cfg string
 }
 
 // CheckPasswd will check user's password
 func (a *SimpleAuth) CheckPasswd(name, pass string) (bool, error) {
-	if name != a.Name || pass != a.Password {
-		return false, nil
+	cfgPath := a.Cfg
+	file, err := os.Open(cfgPath)
+	if err != nil {
+		log.Fatal(err)
 	}
-	return true, nil
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	success := false
+	for scanner.Scan() {
+		txt := scanner.Text()
+		args := strings.Split(txt, ":")
+		if name == args[0] && pass == args[1] {
+			success = true
+			break
+		}
+	}
+	return success, nil
 }
