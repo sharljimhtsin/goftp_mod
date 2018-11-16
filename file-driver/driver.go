@@ -171,20 +171,20 @@ func (driver *FileDriver) GetFile(path string, offset int64) (int64, io.ReadClos
 	return info.Size(), f, nil
 }
 
-func (driver *FileDriver) PutFile(destPath string, data io.Reader, appendData bool) (int64, error) {
+func (driver *FileDriver) PutFile(destPath string, data io.Reader, appendData bool, username string) (int64, error, string) {
 	rPath := driver.realPath(destPath)
 	var isExist bool
 	f, err := os.Lstat(rPath)
 	if err == nil {
 		isExist = true
 		if f.IsDir() {
-			return 0, errors.New("A dir has the same name")
+			return 0, errors.New("A dir has the same name"), ""
 		}
 	} else {
 		if os.IsNotExist(err) {
 			isExist = false
 		} else {
-			return 0, errors.New(fmt.Sprintln("Put File error:", err))
+			return 0, errors.New(fmt.Sprintln("Put File error:", err)), ""
 		}
 	}
 
@@ -196,38 +196,38 @@ func (driver *FileDriver) PutFile(destPath string, data io.Reader, appendData bo
 		if isExist {
 			err = os.Remove(rPath)
 			if err != nil {
-				return 0, err
+				return 0, err, ""
 			}
 		}
 		f, err := os.Create(rPath)
 		if err != nil {
-			return 0, err
+			return 0, err, ""
 		}
 		defer f.Close()
 		bytes, err := io.Copy(f, data)
 		if err != nil {
-			return 0, err
+			return 0, err, ""
 		}
-		return bytes, nil
+		return bytes, nil, rPath
 	}
 
 	of, err := os.OpenFile(rPath, os.O_APPEND|os.O_RDWR, 0660)
 	if err != nil {
-		return 0, err
+		return 0, err, ""
 	}
 	defer of.Close()
 
 	_, err = of.Seek(0, os.SEEK_END)
 	if err != nil {
-		return 0, err
+		return 0, err, ""
 	}
 
 	bytes, err := io.Copy(of, data)
 	if err != nil {
-		return 0, err
+		return 0, err, ""
 	}
 
-	return bytes, nil
+	return bytes, nil, rPath
 }
 
 type FileDriverFactory struct {

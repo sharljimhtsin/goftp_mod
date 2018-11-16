@@ -16,7 +16,7 @@ import (
 func main() {
 	var (
 		root = flag.String("root", "", "Root directory to serve")
-		user = flag.String("user", "admin", "Username for login")
+		user = flag.String("user", "nobody", "Username for login")
 		pass = flag.String("pass", "123456", "Password for login")
 		port = flag.Int("port", 2121, "Port")
 		host = flag.String("host", "localhost", "Port")

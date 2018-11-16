@@ -1022,19 +1022,22 @@ func (cmd commandStor) Execute(conn *Conn, param string) {
 	defer func() {
 		conn.appendData = false
 	}()
-
-	bytes, err := conn.driver.PutFile(targetPath, conn.dataConn, conn.appendData)
+	username := conn.LoginUser()
+	bytes, err, rPath := conn.driver.PutFile(targetPath, conn.dataConn, conn.appendData, username)
 	if err == nil {
-		usr := conn.LoginUser()
-		msg := "OK, received " + strconv.Itoa(int(bytes)) + " bytes =>>>>" + targetPath + "@" + usr
-		u, e := user.Lookup(usr)
+		msg := "OK, received " + strconv.Itoa(int(bytes)) + " bytes"
+		u, e := user.Lookup(username)
 		if e != nil {
-			exec.Command("chown " + usr + " " + targetPath)
+			fmt.Println(e)
+			exec.Command("chown " + username + " " + rPath)
 		} else {
 			i, _ := strconv.Atoi(u.Uid)
-			os.Chown(targetPath, i, 0)
+			fmt.Println(i)
+			err := os.Chown(rPath, i, 0)
+			fmt.Println(err)
 		}
-		os.Chmod(targetPath, os.FileMode(644))
+		err = os.Chmod(rPath, os.FileMode(777))
+		fmt.Println(err)
 		conn.writeMessage(226, msg)
 	} else {
 		conn.writeMessage(450, fmt.Sprint("error during transfer: ", err))
