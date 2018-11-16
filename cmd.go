@@ -7,6 +7,9 @@ package server
 import (
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
+	"os/user"
 	"strconv"
 	"strings"
 )
@@ -1022,7 +1025,16 @@ func (cmd commandStor) Execute(conn *Conn, param string) {
 
 	bytes, err := conn.driver.PutFile(targetPath, conn.dataConn, conn.appendData)
 	if err == nil {
-		msg := "OK, received " + strconv.Itoa(int(bytes)) + " bytes"
+		usr := conn.LoginUser()
+		msg := "OK, received " + strconv.Itoa(int(bytes)) + " bytes =>>>>" + targetPath + "@" + usr
+		u, e := user.Lookup(usr)
+		if e != nil {
+			exec.Command("chown " + usr + " " + targetPath)
+		} else {
+			i, _ := strconv.Atoi(u.Uid)
+			os.Chown(targetPath, i, 0)
+		}
+		os.Chmod(targetPath, os.FileMode(644))
 		conn.writeMessage(226, msg)
 	} else {
 		conn.writeMessage(450, fmt.Sprint("error during transfer: ", err))

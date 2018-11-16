@@ -9,9 +9,8 @@ package main
 import (
 	"flag"
 	"log"
-
-	filedriver "github.com/goftp/file-driver"
-	"github.com/goftp/server"
+	"server"
+	"server/file-driver"
 )
 
 func main() {
